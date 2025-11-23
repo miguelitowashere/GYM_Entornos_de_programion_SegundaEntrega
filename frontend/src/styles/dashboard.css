@@ -1,0 +1,119 @@
+/* ===========================
+   DARK MODE GLOBAL
+   =========================== */
+
+body {
+  background: #111;
+  color: #f1f1f1;
+  margin: 0;
+  font-family: "Inter", sans-serif;
+}
+
+/* Links */
+a {
+  color: #3A86FF;
+  text-decoration: none;
+}
+
+a:hover {
+  opacity: 0.8;
+}
+
+/* ===========================
+   SIDEBAR
+   =========================== */
+
+.sidebar {
+  width: 240px;
+  height: 100vh;
+  background: #1A1A1A;
+  border-right: 1px solid #222;
+  padding: 25px;
+  position: fixed;
+  top: 0;
+  left: 0;
+}
+
+.sidebar h2 {
+  margin-top: 0;
+  font-size: 22px;
+  margin-bottom: 20px;
+  font-weight: 700;
+  color: #fff;
+}
+
+.sidebar button {
+  width: 100%;
+  padding: 12px;
+  margin-top: 15px;
+  background: #3A86FF;
+  border: none;
+  color: white;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: 0.2s;
+}
+
+.sidebar button:hover {
+  background: #2667D1;
+}
+
+/* ===========================
+   MAIN CONTENT
+   =========================== */
+
+.dashboard-content {
+  margin-left: 260px;
+  padding: 40px;
+}
+
+.card {
+  background: #1E1E1E;
+  padding: 20px;
+  border-radius: 8px;
+  border: 1px solid #2A2A2A;
+  margin-bottom: 20px;
+}
+
+.card-title {
+  margin-top: 0;
+  color: #fff;
+}
+
+.input,
+.select {
+  width: 100%;
+  padding: 10px;
+  background: #111;
+  color: #fff;
+  border: 1px solid #333;
+  border-radius: 6px;
+  margin-bottom: 15px;
+}
+
+.btn {
+  padding: 10px 20px;
+  background: #3A86FF;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  margin-top: 10px;
+}
+
+.btn:hover {
+  background: #2667D1;
+}
+
+/* ===========================
+   RESERVATION CARDS
+   =========================== */
+
+.reservation-item {
+  background: #1E1E1E;
+  padding: 15px;
+  border-radius: 6px;
+  margin-bottom: 10px;
+  border: 1px solid #2A2A2A;
+}

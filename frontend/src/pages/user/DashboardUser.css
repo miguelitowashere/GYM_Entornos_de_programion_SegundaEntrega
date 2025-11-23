@@ -1,0 +1,241 @@
+/* ===== PÁGINA COMPLETA ===== */
+body {
+  margin: 0;
+  padding: 0;
+  background: #0f1419;
+  overflow-y: scroll;
+}
+
+.dashboard-container {
+  max-width: 800px;
+  margin: 100px auto 40px;
+  padding: 30px 20px;
+  min-height: calc(100vh - 140px);
+}
+
+/* ===== SECCIONES ACORDEÓN ===== */
+.section {
+  background: linear-gradient(135deg, #1a1f2e 0%, #252d3d 100%);
+  border-radius: 20px;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
+  margin-bottom: 24px;
+  overflow: hidden;
+  border: 1px solid #2d3748;
+  transition: all 0.3s ease;
+}
+
+.section:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
+}
+
+.section-header {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  padding: 20px 28px;
+  cursor: pointer;
+  user-select: none;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-weight: 600;
+}
+
+.section-header:hover {
+  background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
+}
+
+.section-header h3 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.section-content {
+  padding: 32px;
+  background: #1a1f2e;
+  color: white;
+  max-height: none;
+  overflow: visible;
+}
+
+/* ===== DÍAS RESTANTES ===== */
+.days-display {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 20px;
+  color: white;
+  text-align: center;
+  box-shadow: 0 10px 40px rgba(102, 126, 234, 0.4);
+}
+
+.days-number {
+  font-size: 80px;
+  font-weight: 700;
+  line-height: 1;
+  text-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+  margin-bottom: 10px;
+}
+
+.days-label {
+  font-size: 20px;
+  font-weight: 500;
+  opacity: 0.95;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+}
+
+.warning-text {
+  margin-top: 20px;
+  padding: 16px 24px;
+  background: rgba(239, 68, 68, 0.15);
+  border: 2px solid rgba(239, 68, 68, 0.3);
+  border-radius: 12px;
+  color: #fca5a5;
+  text-align: center;
+  font-weight: 600;
+  font-size: 15px;
+}
+
+/* ===== INPUTS Y SELECTS ===== */
+.input-select {
+  width: 100%;
+  padding: 16px 18px;
+  margin-bottom: 20px;
+  border: 2px solid #2d3748;
+  border-radius: 12px;
+  font-size: 16px;
+  background: #0f1419;
+  color: white;
+  transition: all 0.3s ease;
+  box-sizing: border-box;
+}
+
+.input-select:focus {
+  outline: none;
+  border-color: #667eea;
+  box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.2);
+  background: #1a1f2e;
+}
+
+.input-select option {
+  background: #1a1f2e;
+  color: white;
+  padding: 12px;
+}
+
+/* ===== BOTONES ===== */
+.btn {
+  width: 100%;
+  padding: 16px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
+  border-radius: 12px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+}
+
+.btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(102, 126, 234, 0.5);
+}
+
+.btn:active {
+  transform: translateY(0);
+}
+
+/* ===== MENSAJES ===== */
+.msg {
+  margin-top: 20px;
+  padding: 16px 20px;
+  border-radius: 12px;
+  text-align: center;
+  font-weight: 500;
+  background: rgba(102, 126, 234, 0.15);
+  border: 1px solid rgba(102, 126, 234, 0.3);
+  color: #a78bfa;
+  font-size: 15px;
+}
+
+/* ===== RESERVAS ===== */
+.reservation-box {
+  padding: 18px 24px;
+  background: #0f1419;
+  border-left: 4px solid #667eea;
+  border-radius: 12px;
+  margin-bottom: 12px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  transition: all 0.2s ease;
+  border: 1px solid #2d3748;
+}
+
+.reservation-box:hover {
+  background: #252d3d;
+  transform: translateX(5px);
+}
+
+.reservation-box b {
+  color: white;
+  font-weight: 600;
+  font-size: 15px;
+}
+
+.reservation-time {
+  background: #667eea;
+  color: white;
+  padding: 8px 16px;
+  border-radius: 25px;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+/* ===== EMPTY STATE ===== */
+.empty-message {
+  text-align: center;
+  color: #64748b;
+  padding: 40px;
+  font-size: 16px;
+  font-style: italic;
+}
+
+/* ===== RESPONSIVE ===== */
+@media (max-width: 768px) {
+  .dashboard-container {
+    margin: 80px 10px 20px;
+    padding: 15px;
+  }
+  
+  .days-number {
+    font-size: 64px;
+  }
+
+  .days-label {
+    font-size: 16px;
+  }
+
+  .section-content {
+    padding: 24px;
+  }
+
+  .section-header {
+    padding: 16px 20px;
+  }
+
+  .section-header h3 {
+    font-size: 16px;
+  }
+}
