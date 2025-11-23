@@ -75,10 +75,6 @@ npm run dev
 
 ---
 
-Con estos archivos, cualquier persona puede clonar el repo, hacer doble clic en `start-app.bat` y usar la aplicación sin tocar la terminal.
+Con estos archivos cualquier persona puede clonar el repo, hacer doble clic en start-app.bat y usar la aplicación sin tocar la terminal.
 
 ---
-
-Si quieres, puedo hacer **una versión todavía más bonita**, con secciones de instalación rápida, estructura de carpetas y notas para desarrolladores. Esto hace que tu README se vea mucho más profesional en GitHub.
-
-¿Quieres que haga eso también?
