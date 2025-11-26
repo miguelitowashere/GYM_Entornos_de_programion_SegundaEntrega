@@ -2,6 +2,9 @@
 
 Este repositorio incluye el **backend en Django** y el **frontend en React (Vite)** para administrar reservas, membresías y funcionalidades de un gimnasio.
 
+Se adjunta video en youtube del funcionamiento https://youtu.be/kyX9wrSsP3U
+
+
 ---
 
 ## Despliegue sin terminal
