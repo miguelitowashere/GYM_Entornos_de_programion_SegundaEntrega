@@ -9,26 +9,33 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from channels.layers import get_channel_layer
 from asgiref.sync import async_to_sync
 
+# ✅ IMPORT CORREGIDO - Ajusta la ruta según tu estructura de proyecto
+# Si tu modelo UserMembership está en una app llamada "memberships":
+from memberships.models import UserMembership
+# Si está en otra app, ajusta el import. Por ejemplo:
+# from accounts.models import UserMembership
+
 User = get_user_model()
 
 class LoginView(APIView):
     def post(self, request):
-        user = authenticate(
-            username=request.data.get("username"),
-            password=request.data.get("password")
-        )
+        username = request.data.get("username")
+        password = request.data.get("password")
 
-        if not user:
+        user = authenticate(username=username, password=password)
+
+        if user is None:
             return Response(
-                {"detail": "Credenciales inválidas"},
-                status=status.HTTP_400_BAD_REQUEST
+                {"error": "Credenciales inválidas"},
+                status=status.HTTP_401_UNAUTHORIZED
             )
 
         refresh = RefreshToken.for_user(user)
 
         return Response({
+            "access": str(refresh.access_token),
             "refresh": str(refresh),
-            "access": str(refresh.access_token)
+            "is_admin": user.is_staff
         })
 
 
@@ -36,22 +43,21 @@ class MeView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
-        user = request.user
         return Response({
-            "username": user.username,
-            "is_admin": user.is_staff
+            "id": request.user.id,
+            "username": request.user.username,
+            "email": request.user.email,
+            "is_admin": request.user.is_staff
         })
 
 
 class CreateUserView(APIView):
-    """Admin crea nuevos usuarios"""
     permission_classes = [IsAuthenticated]
 
     def post(self, request):
-        # Solo admin puede crear usuarios
         if not request.user.is_staff:
             return Response(
-                {"error": "No autorizado"}, 
+                {"error": "No autorizado"},
                 status=status.HTTP_403_FORBIDDEN
             )
 
@@ -60,101 +66,121 @@ class CreateUserView(APIView):
 
         if not username or not password:
             return Response(
-                {"error": "Username y password son obligatorios"}, 
+                {"error": "Username y password son obligatorios"},
                 status=status.HTTP_400_BAD_REQUEST
             )
 
-        # Verificar si el usuario ya existe
         if User.objects.filter(username=username).exists():
             return Response(
-                {"error": f"El usuario '{username}' ya existe"}, 
+                {"error": f"El usuario '{username}' ya existe"},
                 status=status.HTTP_400_BAD_REQUEST
             )
 
-        # Crear usuario
         user = User.objects.create_user(
             username=username,
-            password=password,
-            role="user"
+            password=password
         )
 
-        # Enviar notificación por WebSocket
-        channel_layer = get_channel_layer()
-        async_to_sync(channel_layer.group_send)(
-            "reservations_group",
-            {
-                "type": "broadcast_message",
-                "message": {
-                    "event": "user_created",
-                    "username": username,
-                },
-            },
-        )
+        # Crear membresía con 0 días
+        UserMembership.objects.create(user=user, remaining_days=0)
 
         return Response({
             "success": True,
             "user": {
                 "id": user.id,
-                "username": user.username,
-                "role": user.role
+                "username": user.username
             }
         }, status=status.HTTP_201_CREATED)
-class CreateUserView(APIView):
-    """Admin crea nuevos usuarios"""
+
+
+class UpdateUserView(APIView):
     permission_classes = [IsAuthenticated]
 
-    def post(self, request):
+    def put(self, request, user_id):
         if not request.user.is_staff:
             return Response(
-                {"error": "No autorizado"}, 
+                {"error": "No autorizado"},
+                status=status.HTTP_403_FORBIDDEN
+            )
+
+        try:
+            user = User.objects.get(id=user_id)
+        except User.DoesNotExist:
+            return Response(
+                {"error": "Usuario no encontrado"},
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+        # No permitir editar superusuarios
+        if user.is_superuser:
+            return Response(
+                {"error": "No puedes editar un superusuario"},
                 status=status.HTTP_403_FORBIDDEN
             )
 
         username = request.data.get("username")
         password = request.data.get("password")
 
-        if not username or not password:
-            return Response(
-                {"error": "Username y password son obligatorios"}, 
-                status=status.HTTP_400_BAD_REQUEST
-            )
+        # Actualizar username si se proporciona
+        if username and username != user.username:
+            if User.objects.filter(username=username).exists():
+                return Response(
+                    {"error": f"El usuario '{username}' ya existe"},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            user.username = username
 
-        if User.objects.filter(username=username).exists():
-            return Response(
-                {"error": f"El usuario '{username}' ya existe"}, 
-                status=status.HTTP_400_BAD_REQUEST
-            )
+        # Actualizar password si se proporciona
+        if password:
+            user.set_password(password)
 
-        # ✅ CREAR USUARIO NORMAL (NO STAFF)
-        user = User.objects.create_user(
-            username=username,
-            password=password,
-            role="user",
-            is_staff=False,  # ✅ IMPORTANTE
-            is_superuser=False  # ✅ IMPORTANTE
-        )
-
-        print(f"✅ Usuario creado: {user.username} (ID: {user.id}, is_staff: {user.is_staff})")
-
-        # Enviar notificación por WebSocket
-        channel_layer = get_channel_layer()
-        async_to_sync(channel_layer.group_send)(
-            "reservations_group",
-            {
-                "type": "broadcast_message",
-                "message": {
-                    "event": "user_created",
-                    "username": username,
-                    "user_id": user.id,
-                },
-            },
-        )
+        user.save()
 
         return Response({
             "success": True,
             "user": {
                 "id": user.id,
-                "username": user.username,
-                "role": user.role
+                "username": user.username
             }
-        }, status=status.HTTP_201_CREATED)
+        })
+
+
+class DeleteUserView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def delete(self, request, user_id):
+        if not request.user.is_staff:
+            return Response(
+                {"error": "No autorizado"},
+                status=status.HTTP_403_FORBIDDEN
+            )
+
+        try:
+            user = User.objects.get(id=user_id)
+        except User.DoesNotExist:
+            return Response(
+                {"error": "Usuario no encontrado"},
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+        # No permitir eliminar superusuarios
+        if user.is_superuser:
+            return Response(
+                {"error": "No puedes eliminar un superusuario"},
+                status=status.HTTP_403_FORBIDDEN
+            )
+
+        # No permitir que el admin se elimine a sí mismo
+        if user.id == request.user.id:
+            return Response(
+                {"error": "No puedes eliminarte a ti mismo"},
+                status=status.HTTP_403_FORBIDDEN
+            )
+
+        username = user.username
+        user.delete()
+
+        return Response({
+            "success": True,
+            "message": f"Usuario '{username}' eliminado correctamente"
+        })

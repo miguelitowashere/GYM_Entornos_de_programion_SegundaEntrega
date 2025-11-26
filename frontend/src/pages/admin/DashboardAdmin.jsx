@@ -14,21 +14,27 @@ export default function DashboardAdmin() {
   const [history, setHistory] = useState([]);
   const [memberships, setMemberships] = useState([]);
 
-const [selectedUser, setSelectedUser] = useState("");
-const [selectedMembership, setSelectedMembership] = useState("");
-const [newUsername, setNewUsername] = useState("");
-const [newPassword, setNewPassword] = useState("");
+  const [selectedUser, setSelectedUser] = useState("");
+  const [selectedMembership, setSelectedMembership] = useState("");
+  const [newUsername, setNewUsername] = useState("");
+  const [newPassword, setNewPassword] = useState("");
 
-// Nuevos estados para crear membresía
-const [newMembershipName, setNewMembershipName] = useState("");
-const [newMembershipPrice, setNewMembershipPrice] = useState("");
-const [newMembershipDays, setNewMembershipDays] = useState("");
-const [newMembershipIcon, setNewMembershipIcon] = useState("🎁");
-const [newMembershipColor, setNewMembershipColor] = useState("#667eea");
+  // Nuevos estados para crear membresía
+  const [newMembershipName, setNewMembershipName] = useState("");
+  const [newMembershipPrice, setNewMembershipPrice] = useState("");
+  const [newMembershipDays, setNewMembershipDays] = useState("");
+  const [newMembershipIcon, setNewMembershipIcon] = useState("🎁");
+  const [newMembershipColor, setNewMembershipColor] = useState("#667eea");
 
-// Estados para filtros de usuarios
-const [searchUser, setSearchUser] = useState("");
-const [filterDays, setFilterDays] = useState("all");
+  // Estados para filtros de usuarios
+  const [searchUser, setSearchUser] = useState("");
+  const [filterDays, setFilterDays] = useState("all");
+
+  // ✅ Estados para editar usuario (AHORA ESTÁN DENTRO DEL COMPONENTE)
+  const [editingUser, setEditingUser] = useState(null);
+  const [editUsername, setEditUsername] = useState("");
+  const [editPassword, setEditPassword] = useState("");
+  const [showEditModal, setShowEditModal] = useState(false);
 
   const menuItems = [
     { id: "home", label: "Inicio", icon: "🏠" },
@@ -39,7 +45,7 @@ const [filterDays, setFilterDays] = useState("all");
     { id: "users", label: "Usuarios", icon: "👥" }
   ];
 
-  const iconOptions = ["🎁", "🎄", "🎅", "💎", "⭐", "🔥", "👍", "🏆", "👑", "🌟"];
+  const iconOptions = ["🎁", "🎄", "🎅", "💎", "⭐", "🔥", "👑", "🏆", "👑", "🌟"];
   const colorOptions = ["#667eea", "#ffd700", "#cd7f32", "#c0c0c0", "#00d9ff", "#ff6b6b", "#51cf66", "#ff922b", "#cc5de8", "#20c997"];
 
   // Cargar datos
@@ -195,6 +201,66 @@ const [filterDays, setFilterDays] = useState("all");
       loadMemberships();
     } catch (error) {
       alert("❌ Error al eliminar membresía");
+    }
+  }
+
+  function openEditModal(user) {
+    setEditingUser(user);
+    setEditUsername(user.username);
+    setEditPassword("");
+    setShowEditModal(true);
+  }
+
+  async function updateUser() {
+    if (!editUsername) {
+      alert("⚠️ El nombre de usuario no puede estar vacío");
+      return;
+    }
+
+    try {
+      await axios.put(
+        `http://127.0.0.1:8000/api/admin/update_user/${editingUser.id}/`,
+        {
+          username: editUsername,
+          password: editPassword || undefined
+        },
+        { headers: { Authorization: "Bearer " + token } }
+      );
+
+      alert("✅ Usuario actualizado correctamente");
+      setShowEditModal(false);
+      setEditingUser(null);
+      setEditUsername("");
+      setEditPassword("");
+      loadUsers();
+    } catch (error) {
+      if (error.response?.data?.error) {
+        alert(`❌ ${error.response.data.error}`);
+      } else {
+        alert("❌ Error al actualizar usuario");
+      }
+    }
+  }
+
+  async function deleteUser(userId, username) {
+    if (!window.confirm(`¿Estás seguro de eliminar al usuario "${username}"?\n\nEsta acción no se puede deshacer.`)) {
+      return;
+    }
+
+    try {
+      await axios.delete(
+        `http://127.0.0.1:8000/api/admin/delete_user/${userId}/`,
+        { headers: { Authorization: "Bearer " + token } }
+      );
+
+      alert(`✅ Usuario "${username}" eliminado correctamente`);
+      loadUsers();
+    } catch (error) {
+      if (error.response?.data?.error) {
+        alert(`❌ ${error.response.data.error}`);
+      } else {
+        alert("❌ Error al eliminar usuario");
+      }
     }
   }
 
@@ -488,105 +554,152 @@ const [filterDays, setFilterDays] = useState("all");
           </div>
         )}
 
-              {/* USUARIOS */}
-      {activeSection === "users" && (
-        <div className="section-page section-wide">
-          <h1>👥 Usuarios Registrados ({users.length})</h1>
-          
-          {/* FILTROS */}
-          <div className="filters-card">
-            <div className="filter-group">
-              <label>🔍 Buscar por nombre</label>
-              <input
-                type="text"
-                placeholder="Escribe el nombre del usuario..."
-                value={searchUser}
-                onChange={(e) => setSearchUser(e.target.value)}
-                className="filter-input"
-              />
+        {/* USUARIOS */}
+        {activeSection === "users" && (
+          <div className="section-page section-wide">
+            <h1>👥 Usuarios Registrados ({users.length})</h1>
+            
+            {/* FILTROS */}
+            <div className="filters-card">
+              <div className="filter-group">
+                <label>🔍 Buscar por nombre</label>
+                <input
+                  type="text"
+                  placeholder="Escribe el nombre del usuario..."
+                  value={searchUser}
+                  onChange={(e) => setSearchUser(e.target.value)}
+                  className="filter-input"
+                />
+              </div>
+
+              <div className="filter-group">
+                <label>📊 Filtrar por días</label>
+                <select
+                  value={filterDays}
+                  onChange={(e) => setFilterDays(e.target.value)}
+                  className="filter-select"
+                >
+                  <option value="all">Todos los usuarios</option>
+                  <option value="with-days">✅ Con días disponibles</option>
+                  <option value="without-days">⚠️ Sin días disponibles</option>
+                </select>
+              </div>
+
+              {(searchUser || filterDays !== "all") && (
+                <button
+                  className="clear-filters-btn"
+                  onClick={() => {
+                    setSearchUser("");
+                    setFilterDays("all");
+                  }}
+                >
+                  ✕ Limpiar filtros
+                </button>
+              )}
             </div>
 
-            <div className="filter-group">
-              <label>📊 Filtrar por días</label>
-              <select
-                value={filterDays}
-                onChange={(e) => setFilterDays(e.target.value)}
-                className="filter-select"
-              >
-                <option value="all">Todos los usuarios</option>
-                <option value="with-days">✅ Con días disponibles</option>
-                <option value="without-days">⚠️ Sin días disponibles</option>
-              </select>
-            </div>
+            {/* LISTA DE USUARIOS FILTRADA */}
+            <div className="content-card">
+              {(() => {
+                let filteredUsers = users;
 
-            {(searchUser || filterDays !== "all") && (
-              <button
-                className="clear-filters-btn"
-                onClick={() => {
-                  setSearchUser("");
-                  setFilterDays("all");
-                }}
-              >
-                ✕ Limpiar filtros
-              </button>
-            )}
-          </div>
+                if (searchUser) {
+                  filteredUsers = filteredUsers.filter(u =>
+                    u.username.toLowerCase().includes(searchUser.toLowerCase())
+                  );
+                }
 
-          {/* LISTA DE USUARIOS FILTRADA */}
-          <div className="content-card">
-            {(() => {
-              // Aplicar filtros
-              let filteredUsers = users;
+                if (filterDays === "with-days") {
+                  filteredUsers = filteredUsers.filter(u => u.remaining_days > 0);
+                } else if (filterDays === "without-days") {
+                  filteredUsers = filteredUsers.filter(u => u.remaining_days === 0);
+                }
 
-              // Filtro por nombre
-              if (searchUser) {
-                filteredUsers = filteredUsers.filter(u =>
-                  u.username.toLowerCase().includes(searchUser.toLowerCase())
-                );
-              }
+                if (filteredUsers.length === 0) {
+                  return (
+                    <p className="empty-message">
+                      {searchUser || filterDays !== "all"
+                        ? "No se encontraron usuarios con esos criterios"
+                        : "Cargando usuarios..."}
+                    </p>
+                  );
+                }
 
-              // Filtro por días
-              if (filterDays === "with-days") {
-                filteredUsers = filteredUsers.filter(u => u.remaining_days > 0);
-              } else if (filterDays === "without-days") {
-                filteredUsers = filteredUsers.filter(u => u.remaining_days === 0);
-              }
-
-              // Mostrar resultados
-              if (filteredUsers.length === 0) {
                 return (
-                  <p className="empty-message">
-                    {searchUser || filterDays !== "all"
-                      ? "No se encontraron usuarios con esos criterios"
-                      : "Cargando usuarios..."}
-                  </p>
-                );
-              }
-
-              return (
-                <>
-                  <div className="results-summary">
-                    Mostrando <strong>{filteredUsers.length}</strong> de <strong>{users.length}</strong> usuarios
-                  </div>
-                  <div className="list-container">
+                  <>
+                    <div className="results-summary">
+                      Mostrando <strong>{filteredUsers.length}</strong> de <strong>{users.length}</strong> usuarios
+                    </div>
+                    <div className="list-container">
                       {filteredUsers.map(u => (
                         <div
                           key={u.id}
                           className={`list-item ${u.remaining_days > 0 ? 'border-green' : 'border-red'}`}
                         >
-                          <span className="highlight">👤 {u.username}</span>
-                          <span className={`badge ${u.remaining_days > 0 ? 'green' : 'red'}`}>
-                            {u.remaining_days} días
-                          </span>
+                          <div className="user-item-info">
+                            <span className="highlight">👤 {u.username}</span>
+                            <span className={`badge ${u.remaining_days > 0 ? 'green' : 'red'}`}>
+                              {u.remaining_days} días
+                            </span>
+                          </div>
+                          <div className="user-actions">
+                            <button
+                              className="btn-icon btn-edit"
+                              onClick={() => openEditModal(u)}
+                              title="Editar usuario"
+                            >
+                              ✏️
+                            </button>
+                            <button
+                              className="btn-icon btn-delete"
+                              onClick={() => deleteUser(u.id, u.username)}
+                              title="Eliminar usuario"
+                            >
+                              🗑️
+                            </button>
+                          </div>
                         </div>
                       ))}
                     </div>
-                </>
-              );
-            })()}
+                  </>
+                );
+              })()}
+            </div>
           </div>
-        </div>
-      )}
+        )}
+
+        {/* MODAL DE EDITAR USUARIO */}
+        {showEditModal && (
+          <div className="modal-overlay" onClick={() => setShowEditModal(false)}>
+            <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+              <button className="modal-close" onClick={() => setShowEditModal(false)}>✕</button>
+              <h2>✏️ Editar Usuario</h2>
+              <div className="modal-form">
+                <div className="form-group">
+                  <label>👤 Nombre de usuario</label>
+                  <input
+                    type="text"
+                    value={editUsername}
+                    onChange={(e) => setEditUsername(e.target.value)}
+                    placeholder="Nuevo nombre de usuario"
+                  />
+                </div>
+                <div className="form-group">
+                  <label>🔒 Nueva contraseña (opcional)</label>
+                  <input
+                    type="password"
+                    value={editPassword}
+                    onChange={(e) => setEditPassword(e.target.value)}
+                    placeholder="Dejar vacío para no cambiar"
+                  />
+                </div>
+                <button className="btn" onClick={updateUser}>
+                  ✅ Guardar Cambios
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
 
       </main>
     </div>

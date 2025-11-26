@@ -5,6 +5,7 @@ from rest_framework import status
 
 from django.contrib.auth import get_user_model
 from django.utils import timezone
+from datetime import timedelta
 from .models import Membership, UserMembership
 from .serializers import MembershipSerializer, UserWithDaysSerializer
 
@@ -12,7 +13,6 @@ from channels.layers import get_channel_layer
 from asgiref.sync import async_to_sync
 
 User = get_user_model()
-
 
 
 class MembershipListCreateView(APIView):
@@ -77,6 +77,11 @@ class AssignDaysView(APIView):
             return Response({"error": "Membresía no existe"}, status=status.HTTP_404_NOT_FOUND)
 
         um, created = UserMembership.objects.get_or_create(user=user)
+        
+        # ✅ Si es la primera vez que recibe días, establecer la fecha inicial como HOY
+        if um.remaining_days == 0 or um.last_discount_date is None:
+            um.last_discount_date = timezone.now().date()
+        
         um.remaining_days += membership.days
         um.save()
 
@@ -112,19 +117,31 @@ class MyDaysView(APIView):
         try:
             um = UserMembership.objects.get(user=request.user)
             
-            # ✅ DESCONTAR DÍA SI CORRESPONDE
+            # ✅ SOLO DESCONTAR SI YA PASÓ UN DÍA COMPLETO
             today = timezone.now().date()
-            if um.last_discount_date != today and um.remaining_days > 0:
-                um.remaining_days -= 1
-                um.last_discount_date = today
-                um.save()
+            
+            if um.last_discount_date is not None and um.remaining_days > 0:
+                # Calcular días transcurridos desde el último descuento
+                days_passed = (today - um.last_discount_date).days
+                
+                # Solo descontar si ha pasado al menos 1 día
+                if days_passed > 0:
+                    # Descontar los días que han pasado (máximo los días restantes)
+                    days_to_discount = min(days_passed, um.remaining_days)
+                    um.remaining_days -= days_to_discount
+                    um.last_discount_date = today
+                    um.save()
             
             return Response({
                 "remaining_days": um.remaining_days,
                 "last_discount_date": um.last_discount_date
             })
         except UserMembership.DoesNotExist:
-            um = UserMembership.objects.create(user=request.user, remaining_days=0)
+            um = UserMembership.objects.create(
+                user=request.user, 
+                remaining_days=0,
+                last_discount_date=None
+            )
             return Response({
                 "remaining_days": 0,
                 "last_discount_date": None
